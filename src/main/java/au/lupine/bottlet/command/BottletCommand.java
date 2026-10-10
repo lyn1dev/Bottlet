@@ -13,7 +13,10 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSele
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.translation.Argument;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +48,11 @@ public final class BottletCommand {
                 .requires(source -> source.getSender().hasPermission("bottlet.command.bottlet.convert") && source.getSender() instanceof Player)
                 .executes(context -> {
                     Player player = (Player) context.getSource().getSender();
+
+                    if (!isNearEnchantingTable(player)) {
+                        player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                        return 0;
+                    }
 
                     int experience = 0;
                     int bottles = 0;
@@ -87,6 +95,11 @@ public final class BottletCommand {
                     .executes(context -> {
                         Player player = (Player) context.getSource().getSender();
 
+                        if (!isNearEnchantingTable(player)) {
+                            player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                            return 0;
+                        }
+
                         int defaultExperience = Bottlet.instance().config().root().node("bottle", "default_stored_experience").getInt(10);
 
                         int current = Experience.experience(player);
@@ -121,6 +134,11 @@ public final class BottletCommand {
                 .then(Commands.argument("bottles", IntegerArgumentType.integer(1))
                     .executes(context -> {
                         Player player = (Player) context.getSource().getSender();
+
+                        if (!isNearEnchantingTable(player)) {
+                            player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                            return 0;
+                        }
 
                         int bottles = context.getArgument("bottles", Integer.class);
 
@@ -352,6 +370,11 @@ public final class BottletCommand {
                     .executes(context -> {
                         Player player = (Player) context.getSource().getSender();
 
+                        if (!isNearEnchantingTable(player)) {
+                            player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                            return 0;
+                        }
+
                         int experience = Experience.experience(player);
                         if (experience == 0) {
                             player.sendMessage(Component.translatable("bottlet.command.bottlet.store.feedback.max.no_experience"));
@@ -375,6 +398,11 @@ public final class BottletCommand {
                     .then(Commands.argument("experience", IntegerArgumentType.integer(1))
                         .executes(context -> {
                             Player player = (Player) context.getSource().getSender();
+
+                            if (!isNearEnchantingTable(player)) {
+                                player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                return 0;
+                            }
 
                             int experience = context.getArgument("experience", Integer.class);
                             int current = Experience.experience(player);
@@ -404,6 +432,11 @@ public final class BottletCommand {
                         .then(Commands.argument("bottles", IntegerArgumentType.integer(1))
                             .executes(context -> {
                                 Player player = (Player) context.getSource().getSender();
+
+                                if (!isNearEnchantingTable(player)) {
+                                    player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                    return 0;
+                                }
 
                                 int experience = context.getArgument("experience", Integer.class);
                                 int bottles = context.getArgument("bottles", Integer.class);
@@ -456,6 +489,11 @@ public final class BottletCommand {
                             .executes(context -> {
                                 Player player = (Player) context.getSource().getSender();
 
+                                if (!isNearEnchantingTable(player)) {
+                                    player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                    return 0;
+                                }
+
                                 int experience = context.getArgument("experience", Integer.class);
                                 int current = Experience.experience(player);
                                 if (current < experience) {
@@ -503,6 +541,11 @@ public final class BottletCommand {
                         .executes(context -> {
                             Player player = (Player) context.getSource().getSender();
 
+                            if (!isNearEnchantingTable(player)) {
+                                player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                return 0;
+                            }
+
                             int levels = context.getArgument("levels", Integer.class);
                             int experience = Experience.experience(levels);
 
@@ -533,6 +576,11 @@ public final class BottletCommand {
                         .then(Commands.argument("bottles", IntegerArgumentType.integer(1))
                             .executes(context -> {
                                 Player player = (Player) context.getSource().getSender();
+
+                                if (!isNearEnchantingTable(player)) {
+                                    player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                    return 0;
+                                }
 
                                 int levels = context.getArgument("levels", Integer.class);
                                 int experience = Experience.experience(levels);
@@ -586,6 +634,11 @@ public final class BottletCommand {
                         .then(Commands.literal("max")
                             .executes(context -> {
                                 Player player = (Player) context.getSource().getSender();
+
+                                if (!isNearEnchantingTable(player)) {
+                                    player.sendMessage(Component.translatable("bottlet.command.bottlet.feedback.not_near_enchanting_table"));
+                                    return 0;
+                                }
 
                                 int levels = context.getArgument("levels", Integer.class);
                                 int experience = Experience.experience(levels);
@@ -712,5 +765,53 @@ public final class BottletCommand {
                 )
             )
             .build();
+    }
+
+    public static boolean isNearEnchantingTable(@NonNull Player player) {
+        Location loc = player.getLocation();
+        World world = loc.getWorld();
+        if (world == null) return false;
+
+        int minX = loc.getBlockX() - 4;
+        int maxX = loc.getBlockX() + 4;
+        int minY = Math.max(world.getMinHeight(), loc.getBlockY() - 4);
+        int maxY = Math.min(world.getMaxHeight() - 1, loc.getBlockY() + 4);
+        int minZ = loc.getBlockZ() - 4;
+        int maxZ = loc.getBlockZ() + 4;
+
+        Location eyeLoc = player.getEyeLocation();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    if (block.getType() == Material.ENCHANTING_TABLE) {
+                        if (distanceToBlock(loc, x, y, z) <= 3.05 || distanceToBlock(eyeLoc, x, y, z) <= 3.05) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static double distanceToBlock(@NonNull Location loc, int bx, int by, int bz) {
+        double px = loc.getX();
+        double py = loc.getY();
+        double pz = loc.getZ();
+
+        double minX = bx;
+        double maxX = bx + 1.0;
+        double minY = by;
+        double maxY = by + 1.0;
+        double minZ = bz;
+        double maxZ = bz + 1.0;
+
+        double dx = Math.max(0.0, Math.max(minX - px, px - maxX));
+        double dy = Math.max(0.0, Math.max(minY - py, py - maxY));
+        double dz = Math.max(0.0, Math.max(minZ - pz, pz - maxZ));
+
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 }

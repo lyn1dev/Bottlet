@@ -37,11 +37,11 @@ permissions:
 
   bottlet.command.bottlet.mend:
     description: Grants access to the Bottlet mend command.
-    default: true
+    default: false
 
   bottlet.command.bottlet.mend.all:
     description: Grants access to the Bottlet mend all command.
-    default: true
+    default: false
 
   bottlet.command.bottlet.stats:
     description: Grants access to the Bottlet stats command.

@@ -102,6 +102,10 @@ public final class Bottle {
         Integer amount = pdc.get(BOTTLET_STORED_EXPERIENCE, PersistentDataType.INTEGER);
         if (amount != null) return amount;
 
+        // MeridianTweaks compatibility
+        amount = pdc.get(new NamespacedKey("meridiantweaks", "stored_xp"), PersistentDataType.INTEGER);
+        if (amount != null) return amount;
+
         // XPManager compatibility: https://github.com/jwkerr/XPManager
         amount = pdc.get(new NamespacedKey("xpmanager", "xpmanager-store-amount"), PersistentDataType.INTEGER);
         if (amount != null) return amount;
